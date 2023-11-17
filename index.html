@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./index.css">
+  <title>InkSpot</title>
+</head>
+
+<body>
+
+  <script type="importmap">
+    {
+          "imports": {
+            "three": "https://unpkg.com/three@0.158/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.158/examples/jsm/",
+            "postprocessing": "https://cdn.jsdelivr.net/npm/postprocessing@6.33.3/+esm"
+          }
+        }
+      </script>
+  <script id="vertexShader" type="x-shader/x-vertex">
+    varying vec2 vUvs;
+      
+      void main() {
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vUvs = uv;
+      }
+          </script>
+  <script id="fragmentShaderScreen" type="x-shader/x-fragment">
+
+    precision mediump float;
+      //Our input texture
+      uniform sampler2D uTexture; 
+      uniform sampler2D uTextureTwo;
+        varying vec2 vUvs;
+        uniform vec2 uResolution;
+        uniform vec2 uMouse;
+      
+      void main() {
+          //special method to sample from texture
+          vec2 normMouse = uMouse/uResolution;
+          vec4 initTexture = texture2D(uTexture, vUvs);
+          vec4 helloTexture = texture2D(uTextureTwo, vUvs);
+      
+          vec3 colour = initTexture.rgb;
+
+          if(helloTexture.r > 0. && initTexture.r != 0.){
+            colour = initTexture.rgb / 4. + helloTexture.rgb;
+          }
+      
+          gl_FragColor = vec4(colour, 1.0);
+      
+      }
+          </script>
+
+  <script id="fragmentShaderBuffer" type="x-shader/x-fragment">
+
+    precision mediump float;
+      //Our input texture
+      uniform sampler2D uTexture; 
+      uniform sampler2D uTextureTwo; 
+      uniform vec2 uResolution;
+      uniform vec2 uMouse;
+        varying vec2 vUvs;
+
+        float GetNeighbours(vec2 p) {
+          float count = 0.0;
+      
+          for(float y = -1.0; y <= 1.0; y++) {
+              for(float x = -1.0; x <= 1.0; x++) {
+      
+                  if(x == 0.0 && y == 0.0)
+                      continue;
+      
+                  // Scale the offset down
+                  vec2 offset = vec2(x, y) / uResolution.xy;	
+                  // Apply offset and sample texture	 
+                  vec4 lookup = texture2D(uTexture, p + offset); 
+                   // Accumulate the result
+                  count += lookup.r > 0.0 ? 1.0 : 0.0;
+              }
+          }
+      
+          return count;
+      }
+
+      void main() {
+
+      vec2 normMouse = vec2(uMouse.x, abs(uMouse.y - uResolution.y));
+      normMouse = normMouse/uResolution;
+      vec2 normCoord = gl_FragCoord.xy/uResolution;
+      vec3 color = vec3(0.0);
+      float neighbors = 0.0;
+  
+  
+      neighbors += GetNeighbours(vUvs);
+      
+      color = texture2D(uTexture, vUvs).rgb;
+      vec2 checkMouse = normMouse - normCoord;
+      float alpha = 1.0;
+        
+        if(abs(checkMouse.x) < .00075 && abs(checkMouse.y) < .00075){
+          color = vec3(0.01);
+        }
+        
+        if(color.r > 0. && color.r < 1.){
+          color = color + vec3(.01);
+        } else if(neighbors == 3.){
+          color = vec3(.01);
+        }
+      gl_FragColor = vec4(color, alpha);
+      }
+          </script>
+  <script type="module" src="./index.js"></script>
+</body>
+
+</html>
