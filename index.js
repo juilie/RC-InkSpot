@@ -203,10 +203,10 @@ class JulieShader {
                 data[stride + 3] = 255;
             }
             
-            // data[stride] = 0;
-            // data[stride + 1] =0;
-            // data[stride + 2] = 0;
-            // data[stride + 3] = 255;
+            data[stride] = 0;
+            data[stride + 1] =0;
+            data[stride + 2] = 0;
+            data[stride + 3] = 255;
         }
 
         // used the buffer to create a DataTexture
